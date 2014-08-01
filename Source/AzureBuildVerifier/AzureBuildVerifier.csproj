@@ -34,6 +34,10 @@
       <HintPath>..\..\Dependencies\Libraries\Sitecore\Sitecore.Azure.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Sitecore.Azure.System">
+      <HintPath>..\..\Dependencies\Libraries\Sitecore\Sitecore.Azure.System.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Sitecore.Kernel">
       <HintPath>..\..\Dependencies\Libraries\Sitecore\Sitecore.Kernel.dll</HintPath>
       <Private>False</Private>
@@ -47,8 +51,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Exceptions\VerifierException.cs" />
+    <Compile Include="Processor.cs" />
     <Compile Include="Verifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="VerifierSettings.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

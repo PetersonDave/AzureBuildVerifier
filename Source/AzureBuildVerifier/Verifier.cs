@@ -1,57 +1,104 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Sitecore.Azure.Commands.Context;
+using System.IO;
+using AzureBuildVerifier.Exceptions;
 using Sitecore.Azure.Configuration;
 using Sitecore.Azure.Deployments.AzureDeployments;
-using Sitecore.Azure.Deployments.Farms;
-using Sitecore.Azure.Deployments.Roles;
-using Sitecore.Azure.Pipelines.CreateAzurePackage;
-using Sitecore.Data;
-using Sitecore.Data.Items;
-using Sitecore.Pipelines;
+using Sitecore.Azure.Sys.IO;
+using Sitecore.IO;
+using Environment = Sitecore.Azure.Deployments.Environments.Environment;
 
 namespace AzureBuildVerifier
 {
     public class Verifier
     {
+        private readonly VerifierSettings _verifierSettings;
+        private readonly Environment _environment;
+
+        public Verifier(VerifierSettings verifierSettings)
+        {
+            _verifierSettings = verifierSettings;
+            AssertVerifierSettings();
+
+            _environment = GetEnvironment();
+        }
+
+        private void AssertVerifierSettings()
+        {
+            if (_verifierSettings == null) throw new ArgumentNullException("verifierSettings");
+
+            bool argsValid = !string.IsNullOrEmpty(_verifierSettings.EnvironmentType) &&
+                             !string.IsNullOrEmpty(_verifierSettings.FarmName) &&
+                             !string.IsNullOrEmpty(_verifierSettings.LocationName) &&
+                             !string.IsNullOrEmpty(_verifierSettings.RoleName);
+
+            if (!argsValid) throw new Exception("verifierSettings must have values for all properties");
+        }
+
         public void Verify()
         {
-            var test = Settings.EnvironmentDefinitions;
+            var deploymentPath = GetLatestDeploymentPath();
+            var processor = new Processor(deploymentPath, _environment.BuildFolder);
+            processor.ProcessDirectory(_environment.BuildFolder);
+        }
 
-            ID devFabricEvironmentId;
-            ID.TryParse("{4FF3DB12-586B-461B-A491-5392E8C492B8}", out devFabricEvironmentId);       // /sitecore/system/Modules/Azure/DevFabric
+        private Environment GetEnvironment()
+        {
+            var environmentDefinition = Settings.EnvironmentDefinitions.GetEnvironment(_verifierSettings.EnvironmentType);
+            if (environmentDefinition == null) throw new VerifierException(string.Format("Could not obtain environment definition from {0}", _verifierSettings.EnvironmentType));
 
-            var context = new CommandContextBase(devFabricEvironmentId, "Local Emulator");
-            var environment = Sitecore.Azure.Deployments.Environments.Environment.GetEnvironment(Settings.EnvironmentDefinitions.GetEnvironment(context.EnvironmentType));
+            var environment = Environment.GetEnvironment(environmentDefinition);
+            if (environment == null) throw new VerifierException(string.Format("Could not obtain environment from valid environment definition {0}", _verifierSettings.EnvironmentType));
 
-            ID azureDeploymentItemId;
-            ID.TryParse("{501FBF6B-7931-40DC-9A85-60F59EB3DA93}", out azureDeploymentItemId);
+            return environment;
+        }
 
-            var db = Sitecore.Data.Database.GetDatabase("master");
-            var azureDeploymentItemItem = db.GetItem(azureDeploymentItemId);
-            var azureDeploymentItem = new AzureDeploymentItem(azureDeploymentItemItem);         // /sitecore/system/Modules/Azure/DevFabric/localhost/Delivery01/Role01/Production
+        private AzureDeployment GetAzureDeployment()
+        {
+            var location = _environment.GetLocation(_verifierSettings.LocationName);
+            if (location == null) throw new VerifierException(string.Format("Could not obtain location for {0}", _verifierSettings.LocationName));
 
-            Farm farm = Sitecore.Azure.Deployments.Environments.Environment.GetEnvironment(environment.EnvironmentDefinition).GetLocation("Localhosr").GetFarm("Delivery01", DeploymentType.ContentDelivery);
+            var farm = location.GetFarm(_verifierSettings.FarmName, _verifierSettings.DeploymentType);
+            if (farm == null) throw new VerifierException(string.Format("Could not obtain farm name {0} and deploymen type {1}", _verifierSettings.FarmName, _verifierSettings.DeploymentType));
 
-            var azureRole = new WebRole(farm, (Item) null);
+            var role = farm.GetWebRole(_verifierSettings.RoleName);
+            if (role == null) throw new VerifierException(string.Format("Could not obtain web role {0}", _verifierSettings.RoleName));
 
-            var cd = new ContentDeliveryDeployment(azureRole, azureDeploymentItem);
+            var deployment = role.GetDeployment(_verifierSettings.DeploymentSlot);
+            if (deployment == null) throw new VerifierException(string.Format("Could not obtain deployment for slot {0}", _verifierSettings.DeploymentSlot));
 
-            var args = new CreateAzureDeploymentPipelineArgs();
-            args.Deployment = cd;
+            return deployment;
+        }
 
-            //var factory = new EntitiesFactory();
-            //factory.Create()
+        private string GetLatestDeploymentPath()
+        {
+            var packagesDirectoryInfo = new DirectoryInfo(FileUtil.MapDataFilePath("AzurePackages"));
+            var buildFolderPathInfo = VariablesReplacer.MapFolderPathWithVariables(_environment.BuildFolder, packagesDirectoryInfo, Settings.GlobalVariables);
+            if (!buildFolderPathInfo.Exists) throw new Exception(string.Format("Default build folder does not exist for environment: {0}", _environment.BuildFolder));
 
-            //Farm farm = Sitecore.Azure.Deployments.Environments.Environment.GetEnvironment(environmentDefinition).GetLocation(locationName).GetFarm(farmName, deploymentType);
+            string deploymentFolder = GetDeploymentFolder();
 
+            int folderCounter = 0;
+            DirectoryInfo deployDirectoryInfo = buildFolderPathInfo;
+            while (deployDirectoryInfo.Exists)
+            {
+                deployDirectoryInfo = new DirectoryInfo(FileUtil.MakePath(buildFolderPathInfo.FullName, string.Format("({0}) {1}", folderCounter, deploymentFolder), '\\'));
+                ++folderCounter;
+            }
 
+            if (deployDirectoryInfo == null) throw new Exception(string.Format("Deployment directory could not be established for build folder: {0}", buildFolderPathInfo.FullName));
 
-            var deploymentPipelineArgs = new CreateAzureDeploymentPipelineArgs();
-            Pipeline.Start("CreateAzurePackage", deploymentPipelineArgs);
+            return deployDirectoryInfo.FullName;
+        }
+
+        /// <summary>
+        ///     values are hard-coded in:
+        ///         1. Sitecore.Azure.Pipelines.DeployAndRun.DevFabric.ResolveSources
+        ///         2. Sitecore.Azure.Pipelines.DeployAndRun.Azure.ResolveSources
+        /// </summary>
+        /// <returns></returns>
+        public string GetDeploymentFolder()
+        {
+            return _verifierSettings.IsDevFabric ? "DevFabric" : "Azure";
         }
     }
 }
