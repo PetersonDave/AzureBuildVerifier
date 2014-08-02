@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using AzureBuildVerifier.Exceptions;
 using Sitecore.Azure.Configuration;
-using Sitecore.Azure.Deployments.AzureDeployments;
 using Sitecore.Azure.Sys.IO;
 using Sitecore.IO;
 using Environment = Sitecore.Azure.Deployments.Environments.Environment;
@@ -34,11 +34,13 @@ namespace AzureBuildVerifier
             if (!argsValid) throw new Exception("verifierSettings must have values for all properties");
         }
 
-        public void Verify()
+        public IEnumerable<string> GetInvalidPaths()
         {
             var deploymentPath = GetLatestDeploymentPath();
             var processor = new Processor(deploymentPath, _environment.BuildFolder);
             processor.ProcessDirectory(_environment.BuildFolder);
+
+            return processor.InvalidPaths;
         }
 
         private Environment GetEnvironment()
@@ -50,23 +52,6 @@ namespace AzureBuildVerifier
             if (environment == null) throw new VerifierException(string.Format("Could not obtain environment from valid environment definition {0}", _verifierSettings.EnvironmentType));
 
             return environment;
-        }
-
-        private AzureDeployment GetAzureDeployment()
-        {
-            var location = _environment.GetLocation(_verifierSettings.LocationName);
-            if (location == null) throw new VerifierException(string.Format("Could not obtain location for {0}", _verifierSettings.LocationName));
-
-            var farm = location.GetFarm(_verifierSettings.FarmName, _verifierSettings.DeploymentType);
-            if (farm == null) throw new VerifierException(string.Format("Could not obtain farm name {0} and deploymen type {1}", _verifierSettings.FarmName, _verifierSettings.DeploymentType));
-
-            var role = farm.GetWebRole(_verifierSettings.RoleName);
-            if (role == null) throw new VerifierException(string.Format("Could not obtain web role {0}", _verifierSettings.RoleName));
-
-            var deployment = role.GetDeployment(_verifierSettings.DeploymentSlot);
-            if (deployment == null) throw new VerifierException(string.Format("Could not obtain deployment for slot {0}", _verifierSettings.DeploymentSlot));
-
-            return deployment;
         }
 
         private string GetLatestDeploymentPath()
