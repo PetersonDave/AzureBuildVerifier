@@ -54,10 +54,12 @@
   <ItemGroup>
     <Compile Include="Commands\VerifyBuild.cs" />
     <Compile Include="Exceptions\VerifierException.cs" />
-    <Compile Include="Processor.cs" />
+    <Compile Include="Processors\Processor.cs" />
+    <Compile Include="Processors\Sharknado\ArtifactsProcessor.cs" />
+    <Compile Include="Utilities\AzureItemUtilities.cs" />
     <Compile Include="Verifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VerifierSettings.cs" />
+    <Compile Include="AzureDeploymentContext.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Config\Include\AzureBuildVerifier.Command.config" />

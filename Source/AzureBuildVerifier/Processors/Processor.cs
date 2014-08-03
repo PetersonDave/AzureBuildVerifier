@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 
-namespace AzureBuildVerifier
+namespace AzureBuildVerifier.Processors
 {
     public class Processor
     {

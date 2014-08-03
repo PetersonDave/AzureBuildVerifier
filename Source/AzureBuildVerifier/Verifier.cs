@@ -1,64 +1,47 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using AzureBuildVerifier.Exceptions;
+using AzureBuildVerifier.Processors.Sharknado;
 using Sitecore.Azure.Configuration;
+using Sitecore.Azure.Pipelines.BasePipeline;
 using Sitecore.Azure.Sys.IO;
 using Sitecore.IO;
-using Environment = Sitecore.Azure.Deployments.Environments.Environment;
+using Sitecore.Pipelines;
 
 namespace AzureBuildVerifier
 {
     public class Verifier
     {
-        private readonly VerifierSettings _verifierSettings;
-        private readonly Environment _environment;
+        private readonly AzureDeploymentContext _azureDeploymentContext;
 
-        public Verifier(VerifierSettings verifierSettings)
+        public Verifier(AzureDeploymentContext azureDeploymentContext)
         {
-            _verifierSettings = verifierSettings;
-            AssertVerifierSettings();
-
-            _environment = GetEnvironment();
-        }
-
-        private void AssertVerifierSettings()
-        {
-            if (_verifierSettings == null) throw new ArgumentNullException("verifierSettings");
-
-            bool argsValid = !string.IsNullOrEmpty(_verifierSettings.EnvironmentType) &&
-                             !string.IsNullOrEmpty(_verifierSettings.FarmName) &&
-                             !string.IsNullOrEmpty(_verifierSettings.LocationName) &&
-                             !string.IsNullOrEmpty(_verifierSettings.RoleName);
-
-            if (!argsValid) throw new Exception("verifierSettings must have values for all properties");
+            _azureDeploymentContext = azureDeploymentContext;
         }
 
         public IEnumerable<string> GetInvalidPaths()
         {
             var deploymentPath = GetLatestDeploymentPath();
-            var processor = new Processor(deploymentPath, _environment.BuildFolder);
-            processor.ProcessDirectory(_environment.BuildFolder);
 
-            return processor.InvalidPaths;
-        }
+            var args = new RolePipelineArgsBase {Deployment = _azureDeploymentContext.Deployment};
+            var artifactsProcessor = new ArtifactsProcessor();
 
-        private Environment GetEnvironment()
-        {
-            var environmentDefinition = Settings.EnvironmentDefinitions.GetEnvironment(_verifierSettings.EnvironmentType);
-            if (environmentDefinition == null) throw new VerifierException(string.Format("Could not obtain environment definition from {0}", _verifierSettings.EnvironmentType));
+            CorePipeline.Run("ArtifactsProcessor", args);
 
-            var environment = Environment.GetEnvironment(environmentDefinition);
-            if (environment == null) throw new VerifierException(string.Format("Could not obtain environment from valid environment definition {0}", _verifierSettings.EnvironmentType));
+            return null;
 
-            return environment;
+
+            //var processor = new Processor(deploymentPath, _environment.BuildFolder);
+            //processor.ProcessDirectory(_environment.BuildFolder);
+
+            //return processor.InvalidPaths;
         }
 
         private string GetLatestDeploymentPath()
         {
             var packagesDirectoryInfo = new DirectoryInfo(FileUtil.MapDataFilePath("AzurePackages"));
-            var buildFolderPathInfo = VariablesReplacer.MapFolderPathWithVariables(_environment.BuildFolder, packagesDirectoryInfo, Settings.GlobalVariables);
-            if (!buildFolderPathInfo.Exists) throw new Exception(string.Format("Default build folder does not exist for environment: {0}", _environment.BuildFolder));
+            var buildFolderPathInfo = VariablesReplacer.MapFolderPathWithVariables(_azureDeploymentContext.Environment.BuildFolder, packagesDirectoryInfo, Settings.GlobalVariables);
+            if (!buildFolderPathInfo.Exists) throw new Exception(string.Format("Default build folder does not exist for environment: {0}", _azureDeploymentContext.Environment.BuildFolder));
 
             string deploymentFolder = GetDeploymentFolder();
 
@@ -83,7 +66,7 @@ namespace AzureBuildVerifier
         /// <returns></returns>
         public string GetDeploymentFolder()
         {
-            return _verifierSettings.IsDevFabric ? "DevFabric" : "Azure";
+            return _azureDeploymentContext.EnvironmentDefinition.IsDevFabric ? "DevFabric" : "Azure";
         }
     }
 }
