@@ -54,8 +54,8 @@
   <ItemGroup>
     <Compile Include="Commands\VerifyBuild.cs" />
     <Compile Include="Exceptions\VerifierException.cs" />
-    <Compile Include="Processors\Processor.cs" />
-    <Compile Include="Processors\Sharknado\ArtifactsProcessor.cs" />
+    <Compile Include="ArtifactsAnalyzer.cs" />
+    <Compile Include="Processors\Sharknado\ArtifactsPipelineProcessor.cs" />
     <Compile Include="Utilities\AzureItemUtilities.cs" />
     <Compile Include="Verifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -63,6 +63,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Config\Include\AzureBuildVerifier.Command.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App_Config\Include\AzureBuildVerifier.Pipeline.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

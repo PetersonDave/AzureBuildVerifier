@@ -7,7 +7,7 @@ namespace AzureBuildVerifier.Commands
 {
     internal class VerifyBuild : Command
     {
-        private const string DialogUrl = "/modifications/test.aspx";
+        private const string DialogUrl = "/sitecore/shell/Applications/AzureBuildVerifier/AzureBuildVerifierSummary.aspx";
 
         public override void Execute(CommandContext context)
         {
@@ -25,7 +25,7 @@ namespace AzureBuildVerifier.Commands
             var url = new Sitecore.Text.UrlString(DialogUrl);
             url.Append("id", args.Parameters["id"]);
 
-            Sitecore.Context.ClientPage.ClientResponse.ShowModalDialog(url.ToString());
+            Sitecore.Context.ClientPage.ClientResponse.ShowModalDialog(url.ToString(), "800", "450");
         }
 
         public override CommandState QueryState(CommandContext context)

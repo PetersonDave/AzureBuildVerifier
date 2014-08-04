@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using AzureBuildVerifier.Processors.Sharknado;
 using Sitecore.Azure.Configuration;
 using Sitecore.Azure.Pipelines.BasePipeline;
 using Sitecore.Azure.Sys.IO;
@@ -21,20 +20,16 @@ namespace AzureBuildVerifier
 
         public IEnumerable<string> GetInvalidPaths()
         {
+            var args = new RolePipelineArgsBase { Deployment = _azureDeploymentContext.Deployment };
+
+            CorePipeline.Run("azureBuildVerifier", args);
+            var artifacts = args.CustomData["artifacts"] as IEnumerable<string>;
+            if (artifacts == null) return null;
+
             var deploymentPath = GetLatestDeploymentPath();
+            var processor = new ArtifactsAnalyzer(artifacts, _azureDeploymentContext.Environment.BuildFolder, deploymentPath);
 
-            var args = new RolePipelineArgsBase {Deployment = _azureDeploymentContext.Deployment};
-            var artifactsProcessor = new ArtifactsProcessor();
-
-            CorePipeline.Run("ArtifactsProcessor", args);
-
-            return null;
-
-
-            //var processor = new Processor(deploymentPath, _environment.BuildFolder);
-            //processor.ProcessDirectory(_environment.BuildFolder);
-
-            //return processor.InvalidPaths;
+            return processor.InvalidPaths;
         }
 
         private string GetLatestDeploymentPath()
