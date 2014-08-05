@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Sitecore.Azure.Configuration;
+using Sitecore.Azure.Managers;
 using Sitecore.Azure.Pipelines.BasePipeline;
-using Sitecore.Azure.Sys.IO;
-using Sitecore.IO;
 using Sitecore.Pipelines;
 
 namespace AzureBuildVerifier
@@ -12,6 +11,8 @@ namespace AzureBuildVerifier
     public class Verifier
     {
         private readonly AzureDeploymentContext _azureDeploymentContext;
+        private const string PipelineDevFabric = "azureBuildVerifierDevFabric";
+        private const string PipelineAzure = "azureBuildVerifierAzure";
 
         public Verifier(AzureDeploymentContext azureDeploymentContext)
         {
@@ -20,48 +21,36 @@ namespace AzureBuildVerifier
 
         public IEnumerable<string> GetInvalidPaths()
         {
-            var args = new RolePipelineArgsBase { Deployment = _azureDeploymentContext.Deployment };
+            var pipelineName = _azureDeploymentContext.EnvironmentDefinition.IsDevFabric ? PipelineDevFabric : PipelineAzure;
+            var args = new AzureRolePipelineArgs() { Deployment = _azureDeploymentContext.Deployment };
 
-            CorePipeline.Run("azureBuildVerifier", args);
+            var pipeline = PipelineFactory.GetPipeline(pipelineName);
+            var manager = new PipelineJobManager(pipeline, args);       // required by ResolveSources pipeline processor
+
+            CorePipeline.Run(pipelineName, args);
+
             var artifacts = args.CustomData["artifacts"] as IEnumerable<string>;
             if (artifacts == null) return null;
 
-            var deploymentPath = GetLatestDeploymentPath();
-            var processor = new ArtifactsAnalyzer(artifacts, _azureDeploymentContext.Environment.BuildFolder, deploymentPath);
+            var deploymentPath = GetDestinationPath(args);
+            if (string.IsNullOrEmpty(deploymentPath)) return null;
 
+            var processor = new ArtifactsAnalyzer(artifacts, Settings.WebSiteFolder.FullName, deploymentPath);
             return processor.InvalidPaths;
         }
 
-        private string GetLatestDeploymentPath()
+        private string GetDestinationPath(AzureRolePipelineArgs args)
         {
-            var packagesDirectoryInfo = new DirectoryInfo(FileUtil.MapDataFilePath("AzurePackages"));
-            var buildFolderPathInfo = VariablesReplacer.MapFolderPathWithVariables(_azureDeploymentContext.Environment.BuildFolder, packagesDirectoryInfo, Settings.GlobalVariables);
-            if (!buildFolderPathInfo.Exists) throw new Exception(string.Format("Default build folder does not exist for environment: {0}", _azureDeploymentContext.Environment.BuildFolder));
+            bool hasPackage = args.CustomData["Package"] != null && args.CustomData["Package"] as FileInfo != null;
+            if (!hasPackage) return string.Empty;
 
-            string deploymentFolder = GetDeploymentFolder();
+            var package = (args.CustomData["Package"] as FileInfo).FullName;
+            if (string.IsNullOrEmpty(package)) return string.Empty;
 
-            int folderCounter = 0;
-            DirectoryInfo deployDirectoryInfo = buildFolderPathInfo;
-            while (deployDirectoryInfo.Exists)
-            {
-                deployDirectoryInfo = new DirectoryInfo(FileUtil.MakePath(buildFolderPathInfo.FullName, string.Format("({0}) {1}", folderCounter, deploymentFolder), '\\'));
-                ++folderCounter;
-            }
+            var webRole = _azureDeploymentContext.Deployment.ServiceDefinition.WebRole.FirstOrDefault();
+            if (webRole == null) return string.Empty;
 
-            if (deployDirectoryInfo == null) throw new Exception(string.Format("Deployment directory could not be established for build folder: {0}", buildFolderPathInfo.FullName));
-
-            return deployDirectoryInfo.FullName;
-        }
-
-        /// <summary>
-        ///     values are hard-coded in:
-        ///         1. Sitecore.Azure.Pipelines.DeployAndRun.DevFabric.ResolveSources
-        ///         2. Sitecore.Azure.Pipelines.DeployAndRun.Azure.ResolveSources
-        /// </summary>
-        /// <returns></returns>
-        public string GetDeploymentFolder()
-        {
-            return _azureDeploymentContext.EnvironmentDefinition.IsDevFabric ? "DevFabric" : "Azure";
+            return string.Format(@"{0}\roles\{1}\approot", package, webRole.name);
         }
     }
 }

@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Website.Modifications
+namespace AzureBuildVerifier.sitecore.shell.Applications.AzureBuildVerifier
 {
 
 
@@ -22,5 +22,13 @@ namespace Website.Modifications
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.HtmlControls.HtmlForm form1;
+
+        protected global::System.Web.UI.WebControls.Label lblResults;
+
+        protected global::System.Web.UI.WebControls.Label lblTitle;
+
+        protected global::System.Web.UI.WebControls.Label lblSubTitle;
+
+        protected global::System.Web.UI.HtmlControls.HtmlGenericControl divTitle;
     }
 }

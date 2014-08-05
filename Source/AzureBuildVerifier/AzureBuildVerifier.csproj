@@ -30,6 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ServiceDescription">
+      <HintPath>..\..\..\Azure72\Dependencies\Sitecore 7.2 Dist\ServiceDescription.dll</HintPath>
+    </Reference>
     <Reference Include="Sitecore.Azure">
       <HintPath>..\..\Dependencies\Libraries\Sitecore\Sitecore.Azure.dll</HintPath>
       <Private>False</Private>
@@ -56,16 +59,27 @@
     <Compile Include="Exceptions\VerifierException.cs" />
     <Compile Include="ArtifactsAnalyzer.cs" />
     <Compile Include="Processors\Sharknado\ArtifactsPipelineProcessor.cs" />
-    <Compile Include="Utilities\AzureItemUtilities.cs" />
+    <Compile Include="sitecore\shell\Applications\AzureBuildVerifier\AzureBuildVerifierSummary.aspx.cs">
+      <DependentUpon>AzureBuildVerifierSummary.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="sitecore\shell\Applications\AzureBuildVerifier\AzureBuildVerifierSummary.aspx.designer.cs">
+      <DependentUpon>AzureBuildVerifierSummary.aspx.cs</DependentUpon>
+    </Compile>
     <Compile Include="Verifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="AzureDeploymentContext.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App_Config\Include\AzureBuildVerifier.Command.config" />
+    <Content Include="App_Config\Include\AzureBuildVerifier.Command.config">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="sitecore\shell\Applications\AzureBuildVerifier\AzureBuildVerifierSummary.aspx" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App_Config\Include\AzureBuildVerifier.Pipeline.config" />
+    <None Include="App_Config\Include\AzureBuildVerifier.Pipeline.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
