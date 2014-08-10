@@ -59,12 +59,8 @@
     <Compile Include="Exceptions\VerifierException.cs" />
     <Compile Include="ArtifactsAnalyzer.cs" />
     <Compile Include="Processors\Sharknado\ArtifactsPipelineProcessor.cs" />
-    <Compile Include="sitecore\shell\Applications\AzureBuildVerifier\AzureBuildVerifierSummary.aspx.cs">
-      <DependentUpon>AzureBuildVerifierSummary.aspx</DependentUpon>
+    <Compile Include="UI\AzureBuildVerifierSummary.cs">
       <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="sitecore\shell\Applications\AzureBuildVerifier\AzureBuildVerifierSummary.aspx.designer.cs">
-      <DependentUpon>AzureBuildVerifierSummary.aspx.cs</DependentUpon>
     </Compile>
     <Compile Include="Verifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -74,13 +70,16 @@
     <Content Include="App_Config\Include\AzureBuildVerifier.Command.config">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="sitecore\shell\Applications\AzureBuildVerifier\AzureBuildVerifierSummary.aspx" />
+    <Content Include="UI\AzureBuildVerifierSummary.aspx">
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <None Include="App_Config\Include\AzureBuildVerifier.Pipeline.config">
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

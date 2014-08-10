@@ -7,7 +7,7 @@ namespace AzureBuildVerifier.Commands
 {
     internal class VerifyBuild : Command
     {
-        private const string DialogUrl = "/sitecore/shell/Applications/AzureBuildVerifier/AzureBuildVerifierSummary.aspx";
+        private const string DialogUrl = "/Tools/AzureBuildVerifier/AzureBuildVerifierSummary.aspx";
 
         public override void Execute(CommandContext context)
         {

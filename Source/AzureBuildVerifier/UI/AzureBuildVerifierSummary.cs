@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Linq;
-using AzureBuildVerifier;
 
-namespace AzureBuildVerifier.sitecore.shell.Applications.AzureBuildVerifier
+namespace AzureBuildVerifier.UI
 {
-    public partial class AzureBuildVerifierSummary : System.Web.UI.Page
+    public class AzureBuildVerifierSummary : System.Web.UI.Page
     {
+        protected System.Web.UI.HtmlControls.HtmlForm form1;
+        protected System.Web.UI.WebControls.Label lblResults;
+        protected System.Web.UI.WebControls.Label lblTitle;
+        protected System.Web.UI.WebControls.Label lblSubTitle;
+        protected System.Web.UI.HtmlControls.HtmlGenericControl divTitle;
+
         protected void Page_Load(object sender, EventArgs e)
         {
             var deploymentId = Request.Params["id"];

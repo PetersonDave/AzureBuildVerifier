@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>AzureBuildVerifier</id>
+    <version>1.0.0</version>
+    <authors>David Peterson</authors>
+    <owners>David Peterson</owners>
+    <licenseUrl>https://github.com/PetersonDave/AzureBuildVerifier/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/PetersonDave/AzureBuildVerifier</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Azure Build Verifier</description>
+    <summary>Azure Build Verifier scans Sitecore Azure deploys to verify full file path length against Windows path length limits.</summary>
+    <tags>Sitecore ASP.NET</tags>
+  </metadata>
+</package>

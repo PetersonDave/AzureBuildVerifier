@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="AzureBuildVerifierSummary.aspx.cs" Inherits="AzureBuildVerifier.sitecore.shell.Applications.AzureBuildVerifier.AzureBuildVerifierSummary" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" Inherits="AzureBuildVerifier.UI.AzureBuildVerifierSummary" %>
 
 <!DOCTYPE html>
 
