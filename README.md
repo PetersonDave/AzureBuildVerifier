@@ -3,7 +3,7 @@ Sitecore Azure Build Verifier
 
 Sitecore Azure Build Verifier executes a test run of an Azure build for deployment, verifying the filename and path length against known limitations. It assists in identifying the files and folders which generate the following error when deploying:
 
-_The specified path, file name, or both are too long. The fully qualified file name must be less than 260 characters, and the directory name must be less than 248 characters_
+_"The specified path, file name, or both are too long. The fully qualified file name must be less than 260 characters, and the directory name must be less than 248 characters"_
 
 ##Installation
 
